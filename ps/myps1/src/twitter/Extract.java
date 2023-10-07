@@ -3,8 +3,10 @@
  */
 package twitter;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Extract consists of methods that extract information from a list of tweets.
@@ -24,7 +26,12 @@ public class Extract {
      *         every tweet in the list.
      */
     public static Timespan getTimespan(List<Tweet> tweets) {
-        throw new RuntimeException("not implemented");
+    	var stream = tweets.stream()
+    			.map(t -> t.getTimestamp())
+    			.sorted()
+    			.toList();
+    	var result = new Timespan(stream.get(0), stream.get(stream.size()-1));
+    	return result;
     }
 
     /**
@@ -43,7 +50,29 @@ public class Extract {
      *         include a username at most once.
      */
     public static Set<String> getMentionedUsers(List<Tweet> tweets) {
-        throw new RuntimeException("not implemented");
+        var tmp = tweets.stream()
+        		.map(t -> getSingleTweetMentionedUsers(t))
+        		.flatMap(p -> p.stream())
+        		.toList();
+        var result = new HashSet<String>(tmp);
+        
+        return result;
     }
-
+    
+    private static Set<String> getSingleTweetMentionedUsers(Tweet tweet){
+    	var text = tweet.getText().toLowerCase();
+        Pattern pattern = Pattern.compile("@([A-Za-z0-9_]+)");
+        var mentions = new HashSet<String>();
+        
+        var matcher = pattern.matcher(text);
+        
+        // 查找匹配的Twitter用户名并添加到集合中
+        while (matcher.find()) {
+            String mention = matcher.group(1).toLowerCase(); // 转换为小写，Twitter用户名不区分大小写
+            mentions.add(mention);
+        }
+        
+        return mentions;
+    	
+    }
 }
